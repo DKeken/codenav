@@ -57,10 +57,10 @@ These are not four silos — outputs of one become inputs to another.
 
 - **graphify → qdrant.** After a build/update, store the god-nodes and cross-community
   bridges as `kind: architectural-fact`. Future sessions recall the topology without a rebuild.
-  (`scripts/graphify_to_qdrant.py`)
+  (`${CLAUDE_PLUGIN_ROOT}/scripts/graphify_to_qdrant.py`)
 - **beacon → graphify.** A beacon hit returns a file + snippet. Cross-reference it against
   the graph: which abstract does it live in, what does it bridge to? Turns a flat hit into a
-  situated one. (`scripts/beacon_enrich.py`)
+  situated one. (`${CLAUDE_PLUGIN_ROOT}/scripts/beacon_enrich.py`)
 - **serena ↔ graphify.** `serena find_symbol` gives the exact `source_location`; feed that
   back to `graphify explain "<symbol>"` for its neighbourhood, and vice-versa. Micro and macro
   views of the same node.
@@ -72,8 +72,12 @@ These are not four silos — outputs of one become inputs to another.
 For "I have a fuzzy concept, find and situate it" run the fan-out helper:
 
 ```
-scripts/locate.sh "<concept or description>"
+${CLAUDE_PLUGIN_ROOT}/scripts/locate.sh "<concept or description>"
 ```
+
+`${CLAUDE_PLUGIN_ROOT}` is the plugin's install dir, expanded automatically when codenav runs
+as a plugin. If you installed the skill manually (scripts not bundled alongside), substitute
+the path where you placed `scripts/`.
 
 It queries beacon (semantic) + graphify (topology) + serena (symbol guess) in parallel and
 merges into one ranked answer: candidate files, the abstract each belongs to, and exact

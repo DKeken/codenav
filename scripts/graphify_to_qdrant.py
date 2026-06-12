@@ -60,10 +60,6 @@ def community_of(g: dict) -> dict[str, int]:
     return {n["id"]: n.get("community", -1) for n in g["nodes"]}
 
 
-def labels_of(g: dict) -> dict[str, str]:
-    return {n["id"]: n.get("label", n["id"]) for n in g["nodes"]}
-
-
 def bridges(g: dict, top: int) -> list[tuple[str, int]]:
     """Nodes linking the most distinct communities (own community included)."""
     comm = community_of(g)
