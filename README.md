@@ -1,0 +1,98 @@
+# codenav
+
+A four-axis code-navigation combine for AI coding agents. It binds four persistent
+tools — **qdrant**, **graphify**, **beacon**, **serena** — into one doctrine so an agent
+orients before editing, locates code by meaning, recalls prior decisions, and feeds each
+finding back so the tools sharpen one another.
+
+This is **not** a new MCP server. It is a skill (doctrine) plus glue scripts. graphify is a
+CLI; serena/beacon/qdrant are MCP tools the agent already has. codenav tells the agent how to
+chain them and ships the shell-runnable connective tissue.
+
+## The four axes
+
+| Tool | Axis | Question it answers | Authority |
+|---|---|---|---|
+| qdrant | time | what did we decide / break / learn before? | the diary |
+| graphify | topology (macro) | how does it all connect, where are hubs & bridges? | the map |
+| beacon | semantic retrieval | find the code by meaning — name unknown | the front door |
+| serena | precision (micro), live | where EXACTLY, who references it? | the scalpel |
+
+Each owns a different axis. graphify and serena assume you know a name; beacon is the entry
+when you only have a description; qdrant is the only one that crosses sessions; serena is the
+only one that reads live source. Used in order they collapse "I don't know this codebase" into
+a precise edit with minimal token burn.
+
+## Pipeline
+
+```
+1. qdrant-find "<keywords>"      recall prior context (skip on trivial lookups)
+2. graphify query "<question>"   orient by topology — which abstracts are involved
+3. beacon semantic-search        fuzzy-locate files when the symbol name is unknown
+4. serena find_symbol /          pinpoint exact symbol + callers (the authority)
+   find_referencing_symbols
+5. grep / Glob                   last resort
+6. after change: graphify update .   +   qdrant-store the decision/gotcha
+```
+
+You don't always run all five — see `skills/codenav/SKILL.md` for the decision rule.
+
+## How they complement each other
+
+- **graphify → qdrant**: `scripts/graphify_to_qdrant.py` emits god-nodes, cross-abstract
+  bridges and the abstract map as qdrant-store-ready facts (`kind: architectural-fact`). A
+  future session recalls the topology without rebuilding.
+- **beacon → graphify**: `scripts/beacon_enrich.py` takes a beacon hit's file path and reports
+  which abstract it lives in and what it bridges to — a flat hit becomes a situated one.
+- **serena ↔ graphify**: `serena find_symbol` gives the exact location; `graphify explain`
+  gives the neighbourhood. Micro and macro views of the same node.
+- **fan-out**: `scripts/locate.sh "<concept>"` runs graphify now and prints the exact beacon +
+  serena calls for the agent to merge.
+
+## Install
+
+Drop the skill where your agent loads skills (Claude Code: `~/.claude/skills/codenav/`):
+
+```bash
+cp -r skills/codenav ~/.claude/skills/codenav
+```
+
+Make scripts runnable and call them from your repo root (where `graphify-out/graph.json` lives):
+
+```bash
+chmod +x scripts/*.sh scripts/*.py
+python3 scripts/graphify_to_qdrant.py --project <name>   # emit architectural facts
+python3 scripts/beacon_enrich.py --file <path>           # situate a beacon hit
+bash    scripts/locate.sh "<fuzzy concept>"              # fan-out locate
+```
+
+### Wiring the four tools
+
+- **graphify** — `pip install graphifyy` (or `uv tool install graphifyy`). Build the graph
+  once: `graphify .` then `graphify update .` after changes. Optional `graphify --mcp` exposes
+  it over MCP.
+- **serena** — the serena MCP server (symbol search over your repo).
+- **beacon** — the beacon MCP (hybrid semantic + keyword + BM25 code search).
+- **qdrant** — the qdrant MCP with a persistent collection for cross-session memory.
+
+codenav reads no API keys of its own — it orchestrates whatever the session already has.
+
+## Re-cluster: fixing community over-fragmentation
+
+graphify's Louvain clustering on a sparse AST-only graph over-fragments — a well-layered
+monorepo can split into hundreds of tiny communities. When the project already HAS a canonical
+architecture, re-cluster by that taxonomy instead of by blind modularity:
+
+```bash
+python3 scripts/recluster.py --map taxonomy.example.py
+```
+
+`recluster.py` remaps every node into a project-defined abstract by its source path, then
+regenerates `graph.json`, the report, and the HTML. On a 14k-node / 689-community graph this
+collapsed to **39 clean abstracts** that mirror the real architecture (contracts, core, db:<ctx>,
+api:<ctx>, web:<fsd-layer>, …). Copy `taxonomy.example.py`, edit the `classify()` function for
+your repo's layout, and pass it with `--map`.
+
+## License
+
+MIT
