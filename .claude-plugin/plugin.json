@@ -1,0 +1,19 @@
+{
+	"$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+	"name": "codenav",
+	"version": "1.0.0",
+	"description": "Four-axis code-navigation combine for AI agents: qdrant (memory) + graphify (topology) + beacon (semantic) + serena (precision). Doctrine + glue to orient before editing, locate code by meaning, recall prior decisions.",
+	"author": { "name": "DKeken", "url": "https://github.com/DKeken" },
+	"homepage": "https://github.com/DKeken/codenav",
+	"repository": "https://github.com/DKeken/codenav",
+	"license": "MIT",
+	"keywords": [
+		"code-navigation",
+		"claude-skill",
+		"mcp",
+		"knowledge-graph",
+		"graphrag",
+		"serena",
+		"qdrant"
+	]
+}

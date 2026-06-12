@@ -51,6 +51,19 @@ You don't always run all five — see `skills/codenav/SKILL.md` for the decision
 
 ## Install
 
+### As a Claude Code plugin (recommended)
+
+This repo is a self-hosting plugin marketplace. From Claude Code:
+
+```
+/plugin marketplace add DKeken/codenav
+/plugin install codenav@codenav
+```
+
+Then invoke the doctrine with `/codenav:codenav`. The skill and glue scripts come with it.
+
+### Manual (any agent)
+
 Drop the skill where your agent loads skills (Claude Code: `~/.claude/skills/codenav/`):
 
 ```bash

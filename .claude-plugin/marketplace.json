@@ -1,0 +1,13 @@
+{
+	"$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+	"name": "codenav",
+	"owner": { "name": "DKeken", "url": "https://github.com/DKeken" },
+	"description": "Code-navigation tooling for AI coding agents — the codenav four-axis combine.",
+	"plugins": [
+		{
+			"name": "codenav",
+			"source": "./",
+			"description": "Four-axis code-navigation combine: qdrant + graphify + beacon + serena. Orient by topology, locate by meaning, pinpoint by symbol, recall across sessions."
+		}
+	]
+}
