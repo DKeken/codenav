@@ -22,7 +22,7 @@ def mini_graph() -> dict:
         "nodes": [
             {"id": "a_index", "label": "index.ts", "source_file": "pkg/a/index.ts", "community": 0},
             {"id": "b_index", "label": "index.ts", "source_file": "pkg/b/index.ts", "community": 1},
-            {"id": "hub", "label": "getDeps()", "source_file": "api/composition/deps.ts", "community": 2},
+            {"id": "hub", "label": "appRoot()", "source_file": "app/core/root.ts", "community": 2},
             {"id": "leaf1", "label": "foo()", "source_file": "pkg/a/foo.ts", "community": 0},
             {"id": "leaf2", "label": "bar()", "source_file": "pkg/b/bar.ts", "community": 1},
         ],
@@ -43,14 +43,14 @@ class TestDisambiguate(unittest.TestCase):
         self.assertEqual(g2q._disambiguate(node), "index.ts (a)")
 
     def test_non_barrel_keeps_label(self):
-        node = {"id": "hub", "label": "getDeps()", "source_file": "api/deps.ts"}
-        self.assertEqual(g2q._disambiguate(node), "getDeps()")
+        node = {"id": "hub", "label": "appRoot()", "source_file": "app/root.ts"}
+        self.assertEqual(g2q._disambiguate(node), "appRoot()")
 
 
 class TestGodNodes(unittest.TestCase):
     def test_hub_is_top(self):
         gods = g2q.god_nodes(mini_graph(), top=5)
-        self.assertEqual(gods[0][0], "getDeps()")
+        self.assertEqual(gods[0][0], "appRoot()")
         self.assertEqual(gods[0][1], 4)
 
     def test_skip_barrels_excludes_index(self):
@@ -58,7 +58,7 @@ class TestGodNodes(unittest.TestCase):
         names = [n for n, _ in gods]
         self.assertNotIn("index.ts (a)", names)
         self.assertNotIn("index.ts (b)", names)
-        self.assertIn("getDeps()", names)
+        self.assertIn("appRoot()", names)
 
     def test_barrels_disambiguated_not_merged(self):
         gods = g2q.god_nodes(mini_graph(), top=5)
@@ -71,7 +71,7 @@ class TestBridges(unittest.TestCase):
     def test_hub_spans_three_communities(self):
         brs = g2q.bridges(mini_graph(), top=5)
         top_name, span = brs[0]
-        self.assertEqual(top_name, "getDeps()")
+        self.assertEqual(top_name, "appRoot()")
         self.assertEqual(span, 3)  # touches communities 0,1,2
 
 

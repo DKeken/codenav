@@ -39,6 +39,32 @@ a precise edit with minimal token burn.
 
 You don't always run all five — see `skills/codenav/SKILL.md` for the decision rule.
 
+```mermaid
+flowchart TD
+    Q["Code question / task"] --> R{"Edited here<br/>before?"}
+    R -->|yes| MEM["qdrant-find<br/><i>recall prior decisions/gotchas</i>"]
+    R -->|no| MEM
+    MEM --> ORI["graphify query<br/><i>orient: which abstracts?</i>"]
+    ORI --> K{"Know the<br/>symbol name?"}
+    K -->|"no — only a description"| SEM["beacon semantic-search<br/><i>fuzzy-locate candidate files</i>"]
+    K -->|yes| PIN
+    SEM --> PIN["serena find_symbol /<br/>find_referencing_symbols<br/><i>pinpoint + callers — the authority</i>"]
+    PIN --> V{"serena<br/>confirms?"}
+    V -->|no| STALE["index stale →<br/>graphify update . / beacon reindex"]
+    V -->|yes| EDIT["make the edit"]
+    STALE --> PIN
+    EDIT --> POST["graphify update .<br/>+ qdrant-store the decision"]
+
+    classDef mem fill:#2d2d44,stroke:#8888cc,color:#fff
+    classDef topo fill:#1f3a2f,stroke:#66bb88,color:#fff
+    classDef sem fill:#3a3320,stroke:#ccaa55,color:#fff
+    classDef prec fill:#3a2030,stroke:#cc6699,color:#fff
+    class MEM,POST mem
+    class ORI topo
+    class SEM sem
+    class PIN prec
+```
+
 ## How they complement each other
 
 - **graphify → qdrant**: `scripts/graphify_to_qdrant.py` emits god-nodes, cross-abstract
@@ -50,6 +76,38 @@ You don't always run all five — see `skills/codenav/SKILL.md` for the decision
   gives the neighbourhood. Micro and macro views of the same node.
 - **fan-out**: `scripts/locate.sh "<concept>"` runs graphify now and prints the exact beacon +
   serena calls for the agent to merge.
+
+Each tool's output sharpens another's input — the combine is a cycle, not a one-way pipe:
+
+```mermaid
+flowchart LR
+    subgraph axes["the four axes"]
+        QD["qdrant<br/><b>time</b>"]
+        GF["graphify<br/><b>topology</b>"]
+        BC["beacon<br/><b>semantic</b>"]
+        SR["serena<br/><b>precision</b>"]
+    end
+
+    GF -->|"god-nodes + bridges<br/>(graphify_to_qdrant.py)"| QD
+    QD -->|"recalled symbol/file<br/>→ skip rediscovery"| SR
+    QD -->|"recalled abstract<br/>→ scoped query"| GF
+    BC -->|"hit file → which abstract?<br/>(beacon_enrich.py)"| GF
+    GF -->|"candidate symbol names"| SR
+    SR -->|"exact source_location"| GF
+    GF -->|"explain neighbourhood"| SR
+
+    SR -.->|"authority: overrides<br/>stale index hits"| BC
+    SR -.->|"authority"| GF
+
+    classDef t fill:#2d2d44,stroke:#8888cc,color:#fff
+    classDef g fill:#1f3a2f,stroke:#66bb88,color:#fff
+    classDef b fill:#3a3320,stroke:#ccaa55,color:#fff
+    classDef s fill:#3a2030,stroke:#cc6699,color:#fff
+    class QD t
+    class GF g
+    class BC b
+    class SR s
+```
 
 ## Install
 

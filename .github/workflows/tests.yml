@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+# GitHub's bundled JS actions (checkout/setup-python) still ship a Node 20
+# launcher; opt their runtime into Node 24 to clear the deprecation warning.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   glue-tests:
     runs-on: ubuntu-latest
