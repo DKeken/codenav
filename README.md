@@ -114,6 +114,15 @@ collapsed to **39 clean abstracts** that mirror the real architecture (contracts
 api:<ctx>, web:<fsd-layer>, …). Copy `taxonomy.example.py`, edit the `classify()` function for
 your repo's layout, and pass it with `--map`.
 
+## Provenance
+
+codenav was built and battle-tested on [AGONTS](https://ag0nts.xyz) — a multi-tenant
+AI-teammate SaaS (hexagonal monorepo: `contracts → core → adapters → apps`, seven bounded
+contexts). The 14k-node / 689→39 re-cluster numbers above are from its real codebase, and
+`taxonomy.example.py` encodes its actual layer/context layout — copy it as a starting point if
+your repo is shaped similarly. The doctrine exists because navigating a repo that size with grep
+alone was the bottleneck; the four-tool combine is what replaced it.
+
 ## License
 
 MIT
