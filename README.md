@@ -61,10 +61,31 @@ Make scripts runnable and call them from your repo root (where `graphify-out/gra
 
 ```bash
 chmod +x scripts/*.sh scripts/*.py
-python3 scripts/graphify_to_qdrant.py --project <name>   # emit architectural facts
+python3 scripts/graphify_to_qdrant.py --project <name> --skip-barrels  # emit architectural facts
 python3 scripts/beacon_enrich.py --file <path>           # situate a beacon hit
 bash    scripts/locate.sh "<fuzzy concept>"              # fan-out locate
 ```
+
+`--skip-barrels` drops `index.ts` / `__init__.py` re-export files from the god-node list so
+the signal is real abstractions, not structural plumbing. Barrels that remain (in bridges) are
+disambiguated by parent dir (`index.ts (deps)`) instead of collapsing into one fake node.
+
+`recluster.py` self-bootstraps: if `graphify`/`networkx` aren't importable under the launching
+python, it re-execs under the interpreter graphify recorded at build time
+(`graphify-out/.graphify_python`). So a bare `python3 recluster.py` works regardless of where
+graphify is installed.
+
+## Tests
+
+Stdlib only, no graphify install needed (the functions under test are pure):
+
+```bash
+python3 tests/test_glue.py
+```
+
+Covers barrel disambiguation, `--skip-barrels`, the bridge metric (own + reached communities),
+and beacon_enrich's three outcomes: full-path resolve, ambiguous bare filename (reports
+candidates instead of silently merging), and unknown file.
 
 ### Wiring the four tools
 

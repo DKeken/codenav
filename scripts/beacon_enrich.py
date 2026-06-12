@@ -32,16 +32,31 @@ def main() -> None:
     if lp.exists():
         labels = json.loads(lp.read_text(encoding="utf-8"))
 
-    needle = args.file.replace("\\", "/")
+    needle = args.file.replace("\\", "/").lstrip("./")
     comm_of = {n["id"]: n.get("community", -1) for n in g["nodes"]}
     label_of = {n["id"]: n.get("label", n["id"]) for n in g["nodes"]}
 
+    def same_file(node_sf: str) -> bool:
+        sf = node_sf.replace("\\", "/")
+        # exact path, or needle is a trailing path segment of sf (or vice-versa)
+        return sf == needle or sf.endswith("/" + needle) or needle.endswith("/" + sf)
+
     # nodes living in this file
-    in_file = [n for n in g["nodes"]
-               if needle in (n.get("source_file", "").replace("\\", "/"))]
+    in_file = [n for n in g["nodes"] if same_file(n.get("source_file", ""))]
     if not in_file:
         print(json.dumps({"file": needle, "found": False,
                           "note": "no graph nodes for this file — run graphify update ."}))
+        return
+
+    # guard: a bare filename ("service.ts") can match many distinct files.
+    # Report the candidates instead of silently merging them into one fake file.
+    distinct = sorted({n.get("source_file", "").replace("\\", "/") for n in in_file})
+    if len(distinct) > 1:
+        print(json.dumps({
+            "file": needle, "found": False, "ambiguous": True,
+            "note": f"{len(distinct)} files match — pass a fuller path to disambiguate",
+            "candidates": distinct[:20],
+        }, ensure_ascii=False, indent=2))
         return
 
     ids = {n["id"] for n in in_file}

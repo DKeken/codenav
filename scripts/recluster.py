@@ -15,7 +15,32 @@ Usage:
 import argparse
 import importlib.util
 import json
+import os
+import sys
 from pathlib import Path
+
+
+def _ensure_graphify_interpreter() -> None:
+    """recluster needs graphify + networkx. If they're absent under the current
+    interpreter, re-exec under the one graphify recorded at build time
+    (graphify-out/.graphify_python). Guard against infinite re-exec."""
+    if importlib.util.find_spec("graphify") and importlib.util.find_spec("networkx"):
+        return
+    if os.environ.get("CODENAV_REEXEC") == "1":
+        sys.exit("graphify/networkx not importable even under the recorded "
+                 "interpreter — run inside the graphify environment.")
+    marker = Path("graphify-out/.graphify_python")
+    if not marker.exists():
+        sys.exit("graphify/networkx not found and graphify-out/.graphify_python is "
+                 "missing — build the graph first (`graphify .`).")
+    interp = marker.read_text(encoding="utf-8").strip()
+    if interp and interp != sys.executable:
+        os.environ["CODENAV_REEXEC"] = "1"
+        os.execv(interp, [interp, *sys.argv])
+    sys.exit("graphify/networkx not importable — install graphify (`pip install graphifyy`).")
+
+
+_ensure_graphify_interpreter()
 
 import networkx as nx
 from graphify.cluster import score_all

@@ -22,13 +22,38 @@ def load_graph(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def god_nodes(g: dict, top: int) -> list[tuple[str, int]]:
+# structural re-export files — high degree but not real abstractions
+BARRELS = {"index.ts", "index.tsx", "index.js", "index.jsx", "__init__.py", "mod.rs"}
+
+
+def _disambiguate(node: dict) -> str:
+    """A stable display name. Barrel files share a label (index.ts) across the repo,
+    so qualify them by parent dir; everything else uses its own label."""
+    label = node.get("label", node["id"])
+    if label in BARRELS:
+        parts = node.get("source_file", "").replace("\\", "/").split("/")
+        parent = parts[-2] if len(parts) >= 2 else ""
+        return f"{label} ({parent})" if parent else label
+    return label
+
+
+def god_nodes(g: dict, top: int, *, skip_barrels: bool = False) -> list[tuple[str, int]]:
     deg: Counter = Counter()
     for link in g.get("links", []):
         deg[link["source"]] += 1
         deg[link["target"]] += 1
-    label = {n["id"]: n.get("label", n["id"]) for n in g["nodes"]}
-    return [(label.get(nid, nid), c) for nid, c in deg.most_common(top)]
+    node_by_id = {n["id"]: n for n in g["nodes"]}
+    out: list[tuple[str, int]] = []
+    for nid, c in deg.most_common():
+        node = node_by_id.get(nid)
+        if node is None:
+            continue
+        if skip_barrels and node.get("label") in BARRELS:
+            continue
+        out.append((_disambiguate(node), c))
+        if len(out) >= top:
+            break
+    return out
 
 
 def community_of(g: dict) -> dict[str, int]:
@@ -40,16 +65,27 @@ def labels_of(g: dict) -> dict[str, str]:
 
 
 def bridges(g: dict, top: int) -> list[tuple[str, int]]:
-    """Nodes whose neighbours span the most distinct communities."""
+    """Nodes linking the most distinct communities (own community included)."""
     comm = community_of(g)
     span: dict[str, set] = defaultdict(set)
+    # seed every node with its own community so a bridge counts own + reached
+    for nid, c in comm.items():
+        span[nid].add(c)
     for link in g.get("links", []):
         s, t = link["source"], link["target"]
         span[s].add(comm.get(t, -1))
         span[t].add(comm.get(s, -1))
-    label = labels_of(g)
+    node_by_id = {n["id"]: n for n in g["nodes"]}
     ranked = sorted(span.items(), key=lambda kv: len(kv[1]), reverse=True)
-    return [(label.get(nid, nid), len(cs)) for nid, cs in ranked[:top]]
+    out: list[tuple[str, int]] = []
+    for nid, cs in ranked:
+        node = node_by_id.get(nid)
+        if node is None:
+            continue
+        out.append((_disambiguate(node), len(cs)))
+        if len(out) >= top:
+            break
+    return out
 
 
 def abstract_sizes(g: dict) -> list[tuple[str, int]]:
@@ -67,6 +103,8 @@ def main() -> None:
     ap.add_argument("--project", required=True)
     ap.add_argument("--labels", default="graphify-out/.graphify_labels.json")
     ap.add_argument("--top", type=int, default=10)
+    ap.add_argument("--skip-barrels", action="store_true",
+                    help="exclude index.ts/__init__.py re-export files from god-nodes")
     args = ap.parse_args()
 
     g = load_graph(Path(args.graph))
@@ -79,9 +117,10 @@ def main() -> None:
 
     records: list[dict] = []
 
-    gods = god_nodes(g, args.top)
+    gods = god_nodes(g, args.top, skip_barrels=args.skip_barrels)
+    facet = "god-nodes (real abstractions)" if args.skip_barrels else "god-nodes"
     records.append({
-        "information": "Graph god-nodes (most-connected core abstractions): "
+        "information": f"Graph {facet} (most-connected): "
         + ", ".join(f"{name} ({c} edges)" for name, c in gods),
         "metadata": {"project": args.project, "kind": "architectural-fact",
                      "facet": "god-nodes", "built_at_commit": commit},

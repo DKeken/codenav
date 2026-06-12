@@ -17,10 +17,19 @@ if [ $# -lt 1 ]; then
 fi
 CONCEPT="$*"
 GRAPH="graphify-out/graph.json"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ ! -f "$GRAPH" ]; then
   echo "no $GRAPH — build the graph first: /graphify ." >&2
   exit 1
+fi
+
+# Use the interpreter graphify recorded at build time, so beacon_enrich runs
+# regardless of which python is on PATH. Fall back to python3.
+PY="python3"
+if [ -f graphify-out/.graphify_python ]; then
+  _REC="$(cat graphify-out/.graphify_python)"
+  [ -x "$_REC" ] && PY="$_REC"
 fi
 
 echo "=== codenav locate: \"$CONCEPT\" ==="
@@ -36,7 +45,7 @@ echo
 echo "--- [semantic] agent: run beacon ---"
 echo "Call the beacon semantic-search skill/tool with: \"$CONCEPT\""
 echo "Then, for each hit file, situate it:"
-echo "    python3 scripts/beacon_enrich.py --file <hit-path>"
+echo "    $PY $SCRIPT_DIR/beacon_enrich.py --file <hit-path>"
 
 echo
 echo "--- [precision] agent: run serena ---"
