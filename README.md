@@ -1,5 +1,7 @@
 # codenav
 
+[![tests](https://github.com/DKeken/codenav/actions/workflows/tests.yml/badge.svg)](https://github.com/DKeken/codenav/actions/workflows/tests.yml)
+
 A four-axis code-navigation combine for AI coding agents. It binds four persistent
 tools — **qdrant**, **graphify**, **beacon**, **serena** — into one doctrine so an agent
 orients before editing, locates code by meaning, recalls prior decisions, and feeds each
