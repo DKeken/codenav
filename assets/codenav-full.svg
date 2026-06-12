@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 16" width="480" height="128" shape-rendering="crispEdges" role="img" aria-label="codenav">
+  <title>codenav</title>
+  <!-- mascot: AGONTS robot head + four-axis signal quad -->
+  <rect x="3" y="4" width="10" height="9" fill="#8A918D"/>
+  <rect x="6" y="7" width="2" height="2" fill="#3ECF8E"/>
+  <rect x="10" y="7" width="2" height="2" fill="#3ECF8E"/>
+  <rect x="7" y="2" width="2" height="2" fill="#6F7572"/>
+  <rect x="7" y="0" width="1" height="1" fill="#CC6699"/>
+  <rect x="8" y="0" width="1" height="1" fill="#8888CC"/>
+  <rect x="7" y="1" width="1" height="1" fill="#CCAA55"/>
+  <rect x="8" y="1" width="1" height="1" fill="#3ECF8E"/>
+
+  <!-- wordmark "codenav" — 3x5 pixel font, off-white -->
+  <!-- c (x=16) -->
+  <rect x="17" y="5" width="2" height="1" fill="#E8EAE9"/>
+  <rect x="16" y="6" width="1" height="3" fill="#E8EAE9"/>
+  <rect x="17" y="9" width="2" height="1" fill="#E8EAE9"/>
+  <!-- o (x=20) -->
+  <rect x="21" y="5" width="2" height="1" fill="#E8EAE9"/>
+  <rect x="20" y="6" width="1" height="3" fill="#E8EAE9"/>
+  <rect x="23" y="6" width="1" height="3" fill="#E8EAE9"/>
+  <rect x="21" y="9" width="2" height="1" fill="#E8EAE9"/>
+  <!-- d (x=25) -->
+  <rect x="27" y="4" width="1" height="6" fill="#E8EAE9"/>
+  <rect x="25" y="5" width="2" height="1" fill="#E8EAE9"/>
+  <rect x="24" y="6" width="1" height="3" fill="#E8EAE9"/>
+  <rect x="25" y="9" width="2" height="1" fill="#E8EAE9"/>
+  <!-- e (x=29) -->
+  <rect x="30" y="5" width="2" height="1" fill="#E8EAE9"/>
+  <rect x="29" y="6" width="1" height="3" fill="#E8EAE9"/>
+  <rect x="30" y="7" width="2" height="1" fill="#E8EAE9"/>
+  <rect x="32" y="6" width="1" height="1" fill="#E8EAE9"/>
+  <rect x="30" y="9" width="2" height="1" fill="#E8EAE9"/>
+  <!-- n (x=34) -->
+  <rect x="34" y="5" width="1" height="5" fill="#E8EAE9"/>
+  <rect x="35" y="5" width="2" height="1" fill="#E8EAE9"/>
+  <rect x="37" y="5" width="1" height="5" fill="#E8EAE9"/>
+  <!-- a (x=39) -->
+  <rect x="40" y="5" width="2" height="1" fill="#E8EAE9"/>
+  <rect x="39" y="6" width="1" height="3" fill="#E8EAE9"/>
+  <rect x="42" y="6" width="1" height="3" fill="#E8EAE9"/>
+  <rect x="40" y="7" width="2" height="1" fill="#E8EAE9"/>
+  <rect x="40" y="9" width="2" height="1" fill="#E8EAE9"/>
+  <!-- v (x=44) -->
+  <rect x="44" y="5" width="1" height="3" fill="#E8EAE9"/>
+  <rect x="48" y="5" width="1" height="3" fill="#E8EAE9"/>
+  <rect x="45" y="8" width="1" height="1" fill="#E8EAE9"/>
+  <rect x="47" y="8" width="1" height="1" fill="#E8EAE9"/>
+  <rect x="46" y="9" width="1" height="1" fill="#E8EAE9"/>
+</svg>

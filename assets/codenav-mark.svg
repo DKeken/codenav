@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="128" height="128" shape-rendering="crispEdges" role="img" aria-label="codenav">
+  <title>codenav</title>
+  <!-- robot head — same silhouette as the AGONTS mark -->
+  <rect x="3" y="4" width="10" height="9" fill="#8A918D"/>
+  <!-- eyes -->
+  <rect x="6" y="7" width="2" height="2" fill="#3ECF8E"/>
+  <rect x="10" y="7" width="2" height="2" fill="#3ECF8E"/>
+  <!-- antenna neck -->
+  <rect x="7" y="2" width="2" height="2" fill="#6F7572"/>
+  <!-- four-axis signal quad (replaces the single green signal):
+       each pixel = one tool the combine binds -->
+  <rect x="7" y="0" width="1" height="1" fill="#CC6699"/> <!-- serena  · precision -->
+  <rect x="8" y="0" width="1" height="1" fill="#8888CC"/> <!-- qdrant  · memory -->
+  <rect x="7" y="1" width="1" height="1" fill="#CCAA55"/> <!-- beacon  · semantic -->
+  <rect x="8" y="1" width="1" height="1" fill="#3ECF8E"/> <!-- graphify · topology -->
+</svg>

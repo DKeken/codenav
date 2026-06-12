@@ -1,4 +1,4 @@
-# codenav
+<img src="assets/codenav-full.svg" alt="codenav" height="72">
 
 [![tests](https://github.com/DKeken/codenav/actions/workflows/tests.yml/badge.svg)](https://github.com/DKeken/codenav/actions/workflows/tests.yml)
 
@@ -165,11 +165,48 @@ candidates instead of silently merging), and unknown file.
 - **graphify** — `pip install graphifyy` (or `uv tool install graphifyy`). Build the graph
   once: `graphify .` then `graphify update .` after changes. Optional `graphify --mcp` exposes
   it over MCP.
-- **serena** — the serena MCP server (symbol search over your repo).
-- **beacon** — the beacon MCP (hybrid semantic + keyword + BM25 code search).
-- **qdrant** — the qdrant MCP with a persistent collection for cross-session memory.
+- **serena** — the serena MCP server (symbol search over your repo). No model needed; it runs a
+  language server over your code.
+- **beacon** — the hybrid (semantic + keyword + BM25) code-search MCP. **Semantic search needs a
+  running embedding backend.** Out of the box beacon points at a local **Ollama**:
 
-codenav reads no API keys of its own — it orchestrates whatever the session already has.
+  ```bash
+  # 1. install + run Ollama, then pull the default embedding model
+  ollama pull nomic-embed-text          # 768-dim, what beacon expects by default
+  ollama serve                          # serves http://localhost:11434
+
+  # 2. index your repo, then sanity-check
+  /beacon:reindex                       # first full index (one-time, then incremental)
+  /beacon:index-status                  # file/chunk count, last sync
+  ```
+
+  Beacon's defaults: provider `ollama`, model `nomic-embed-text`, endpoint
+  `http://localhost:11434/v1`, 768 dims, hybrid chunking (512 tok, 50 overlap). Config lives in
+  `.claude/beacon.json`; change a setting with `/beacon:config set <key> <value>`.
+
+  **Don't want to run Ollama?** Switch the provider — each has different dims, so a reindex is
+  forced when you switch:
+
+  | provider | model | dims | needs |
+  |---|---|---|---|
+  | `ollama` (default) | `nomic-embed-text` | 768 | local Ollama, no key |
+  | `openai` | `text-embedding-3-small` | 1536 | `OPENAI_API_KEY` |
+  | `voyage` | `voyage-code-3` | 1024 | Voyage key |
+  | `litellm` | `voyage-code-3` | 1024 | a LiteLLM proxy (Vertex/Bedrock/…) |
+
+  ```bash
+  /beacon:config provider openai        # then set OPENAI_API_KEY, confirm the reindex prompt
+  ```
+
+  If you skip beacon entirely, codenav still works — you lose the "find by meaning when the
+  symbol name is unknown" step and fall back to graphify-orient → serena-pinpoint.
+- **qdrant** — the qdrant MCP with a persistent collection for cross-session memory. Point it at a
+  local or hosted Qdrant; codenav tags every fact with `metadata.project` so memories stay
+  per-repo retrievable.
+
+codenav reads no API keys of its own — it orchestrates whatever the session already has. The
+only model dependency is **beacon's embedding backend** (Ollama by default); graphify (AST-only)
+and serena (language server) need no model or key.
 
 ## Re-cluster: fixing community over-fragmentation
 
