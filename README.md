@@ -28,13 +28,14 @@ a precise edit with minimal token burn.
 ## Pipeline
 
 ```
+0. doctor.sh --fix               self-heal: install deps, build/refresh graph (run once per repo)
 1. qdrant-find "<keywords>"      recall prior context (skip on trivial lookups)
 2. graphify query "<question>"   orient by topology — which abstracts are involved
 3. beacon semantic-search        fuzzy-locate files when the symbol name is unknown
 4. serena find_symbol /          pinpoint exact symbol + callers (the authority)
-   find_referencing_symbols
+   find_referencing_symbols      (editing a hub / prepping a PR? blast_radius.py FIRST)
 5. grep / Glob                   last resort
-6. after change: graphify update .   +   qdrant-store the decision/gotcha
+6. after change: graphify update .   +   graphify_to_qdrant.py   +   qdrant-store the decision
 ```
 
 You don't always run all five — see `skills/codenav/SKILL.md` for the decision rule.
@@ -76,6 +77,17 @@ flowchart TD
   gives the neighbourhood. Micro and macro views of the same node.
 - **fan-out**: `scripts/locate.sh "<concept>"` runs graphify now and prints the exact beacon +
   serena calls for the agent to merge.
+
+Two surfaces derived from the same graph close the gap with dedicated graph-review and
+visual-onboarding tools:
+
+- **change-impact**: `scripts/blast_radius.py --base origin/main` walks the dependents of
+  changed files N hops → impacted files/abstracts + per-seed test-coverage gaps + a
+  low/medium/high risk hint. Run it before editing a hub or prepping a PR to size the blast
+  radius first. Every hit is a graph-derived hypothesis — confirm hot edges with serena.
+- **onboarding**: graphify already emits `graphify-out/GRAPH_REPORT.md` (god-nodes, abstracts,
+  suggested questions) and an interactive `*.html` map on every build. Read/open those to
+  orient a human on an unfamiliar repo; `graphify explain` / `graphify path` give walkthroughs.
 
 Each tool's output sharpens another's input — the combine is a cycle, not a one-way pipe:
 
@@ -134,10 +146,17 @@ Make scripts runnable and call them from your repo root (where `graphify-out/gra
 
 ```bash
 chmod +x scripts/*.sh scripts/*.py
+bash    scripts/doctor.sh --fix                           # one-command self-heal: deps + graph
 python3 scripts/graphify_to_qdrant.py --project <name> --skip-barrels  # emit architectural facts
 python3 scripts/beacon_enrich.py --file <path>           # situate a beacon hit
+python3 scripts/blast_radius.py --base origin/main       # change-impact before a PR
 bash    scripts/locate.sh "<fuzzy concept>"              # fan-out locate
 ```
+
+`doctor.sh` is the bootstrap a fresh install runs first: it installs graphify + python deps if
+missing, builds or refreshes `graphify-out/graph.json`, applies a `taxonomy.py` re-cluster when
+present, checks every bundled script, and prints the agent-side MCP checks (qdrant/beacon/serena)
+a shell cannot run. Bare `doctor.sh` diagnoses without changing anything.
 
 `--skip-barrels` drops `index.ts` / `__init__.py` re-export files from the god-node list so
 the signal is real abstractions, not structural plumbing. Barrels that remain (in bridges) are
@@ -157,8 +176,8 @@ python3 tests/test_glue.py
 ```
 
 Covers barrel disambiguation, `--skip-barrels`, the bridge metric (own + reached communities),
-and beacon_enrich's three outcomes: full-path resolve, ambiguous bare filename (reports
-candidates instead of silently merging), and unknown file.
+beacon_enrich's three outcomes (full-path resolve, ambiguous bare filename, unknown file), and
+blast_radius's reverse/forward dependent walk + per-seed test-coverage-gap detection.
 
 ### Wiring the four tools
 
