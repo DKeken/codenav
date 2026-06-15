@@ -75,6 +75,49 @@ class TestBridges(unittest.TestCase):
         self.assertEqual(span, 3)  # touches communities 0,1,2
 
 
+class TestBlastRadius(unittest.TestCase):
+    def _run(self, args: list[str], graph_path: Path) -> dict:
+        out = subprocess.run(
+            [sys.executable, str(SCRIPTS / "blast_radius.py"),
+             "--graph", str(graph_path), "--json", *args],
+            capture_output=True, text=True, check=True,
+        )
+        return json.loads(out.stdout)
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.gpath = Path(self.tmp.name) / "graph.json"
+        self.gpath.write_text(json.dumps(mini_graph()), encoding="utf-8")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_reverse_dependents_of_leaf(self):
+        # default direction: dependents = who points AT the changed file.
+        # leaf1 (pkg/a/foo.ts) is pointed at by hub and a_index.
+        d = self._run(["--files", "pkg/a/foo.ts", "--hops", "2"], self.gpath)
+        hit = {f["file"] for f in d["impacted_files"]}
+        self.assertIn("app/core/root.ts", hit)
+        self.assertIn("pkg/a/index.ts", hit)
+
+    def test_test_coverage_gap_flagged(self):
+        # mini_graph has no test nodes, so any changed file is an uncovered gap.
+        d = self._run(["--files", "pkg/a/foo.ts"], self.gpath)
+        self.assertIn("pkg/a/foo.ts", d["test_coverage_gaps"])
+
+    def test_unknown_file_reports_not_in_graph(self):
+        d = self._run(["--files", "does/not/exist.ts"], self.gpath)
+        self.assertEqual(d["changed_files_in_graph"], [])
+        self.assertIn("does/not/exist.ts", d["changed_files_not_in_graph"])
+
+    def test_forward_flips_direction(self):
+        # forward: hub depends on its targets, so editing hub impacts the leaves.
+        d = self._run(["--files", "app/core/root.ts", "--forward", "--hops", "1"], self.gpath)
+        hit = {f["file"] for f in d["impacted_files"]}
+        self.assertIn("pkg/a/foo.ts", hit)
+        self.assertIn("pkg/b/bar.ts", hit)
+
+
 class TestBeaconEnrich(unittest.TestCase):
     def _run(self, file_arg: str, graph_path: Path) -> dict:
         out = subprocess.run(
